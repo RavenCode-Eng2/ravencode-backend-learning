@@ -1,4 +1,4 @@
-# 🧠 RavenCode – Módulo de Aprendizaje
+# 🦉 RavenCode – Módulo de Aprendizaje
 
 Este repositorio forma parte del proyecto **RavenCode**, una plataforma de aprendizaje interactiva diseñada para enseñar 
 programación a adolescentes de 12 a 16 años. Aquí se encuentra exclusivamente el **módulo de Aprendizaje**, que gestiona 
