@@ -48,6 +48,42 @@ async def create_or_update_grade(grade: StudentGrades, service: GradesService = 
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.put(
+    "/grades/{student_token}/{module}",
+    response_model=Dict[str, Any],
+    responses={
+        200: {
+            "description": "Grade updated successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message": "Grade updated successfully",
+                        "grade": {
+                            "student_token": "token123",
+                            "module": "Math101",
+                            "grade": 97.0,
+                            "date_assigned": "2025-06-08"
+                        }
+                    }
+                }
+            }
+        },
+        404: {"description": "Grade not found"},
+        400: {"description": "Invalid data"}
+    }
+)
+async def update_grade(student_token: str, module: str, grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
+    """
+    Update an existing grade for the student.
+    """
+    try:
+        # Actualiza la calificación existente para el estudiante
+        result = service.create_or_update_grades(grade)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.get(
     "/grades/{student_token}/{module}",
