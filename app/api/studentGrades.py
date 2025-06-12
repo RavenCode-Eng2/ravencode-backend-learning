@@ -1,0 +1,106 @@
+# src/api/studentGrades.py
+from fastapi import APIRouter, HTTPException, Depends, status
+from typing import List, Dict, Any
+
+from app.models.studentGrades import StudentGrades
+from app.services.studentGrades import GradesService
+
+router = APIRouter()
+
+def get_student_grade_service():
+    return GradesService()
+
+@router.post(
+    "/grades/",
+    response_model=Dict[str, Any],
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        201: {
+            "description": "Grade created successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message": "Grade created successfully",
+                        "grade": {
+                            "student_token": "token123",
+                            "module": "Math101",
+                            "grade": 95.0,
+                            "date_assigned": "2025-06-08"
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Grade already exists or invalid data"}
+    }
+)
+async def create_or_update_grade(grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
+    """
+    Create or update a student's grade in the database.
+    If the student already has grades, updates them.
+    """
+    try:
+        # Llamamos al servicio que maneja la creación o actualización de las calificaciones
+        result = service.create_or_update_grades(grade)
+        return {
+            "message": "Grade created successfully",
+            "grade": result  # Aquí result debe ser lo que retorna el servicio
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get(
+    "/grades/{student_token}/{module}",
+    response_model=Dict[str, Any],
+    responses={
+        200: {
+            "description": "Grade found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "student_token": "token123",
+                        "module": "Math101",
+                        "grade": 95.0,
+                        "date_assigned": "2025-06-08"
+                    }
+                }
+            }
+        },
+        404: {"description": "Grade not found"}
+    }
+)
+async def get_grade(student_token: str, module: str, service: GradesService = Depends(get_student_grade_service)):
+    try:
+        grade = service.get_grade_by_student_token(student_token, module)
+        if not grade:
+            raise HTTPException(status_code=404, detail="Grade not found")
+        return grade
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get(
+    "/grades/",
+    response_model=List[Dict[str, Any]],
+    responses={
+        200: {
+            "description": "List of all grades",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "student_token": "token123",
+                            "module": "Math101",
+                            "grade": 95.0,
+                            "date_assigned": "2025-06-08"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+)
+async def list_grades(service: GradesService = Depends(get_student_grade_service)):
+    try:
+        return service.list_grades()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
