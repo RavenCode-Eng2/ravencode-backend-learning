@@ -33,7 +33,7 @@ los contenidos temáticos, el editor de código, las evaluaciones automáticas y
 ```
 5. Ejecutar el servidor
 ```bash
-   uvicorn main:app --reload --port 8002
+   uvicorn app.main:app --reload --port 8002
 ```
 6. Verificar en el navegador:
 http://localhost:8002/api
