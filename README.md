@@ -36,7 +36,12 @@ los contenidos temáticos, el editor de código, las evaluaciones automáticas y
    uvicorn app.main:app --reload --port 8002
 ```
 6. Verificar en el navegador:
-http://localhost:8002/api
+
+   http://localhost:8002
+
+7. Documentacion Swagger Endpoints
+
+   http://localhost:8002/docs
 
 ### 🔐 Funcionalidades del módulo
 * Acceso progresivo a módulos temáticos de programación.
