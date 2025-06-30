@@ -34,22 +34,21 @@ def get_student_grade_service():
         400: {"description": "Grade already exists or invalid data"}
     }
 )
-async def create_or_update_grade(grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
+async def create_grade(grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
     """
     Create or update a student's grade in the database.
     If the student already has grades, updates them.
     """
     try:
-        # Llamamos al servicio que maneja la creación o actualización de las calificaciones
-        result = service.create_or_update_grades(grade)
+        # Llamamos al servicio que maneja la creación  de las calificaciones
+        result = service.create_grade(grade)
         return {
-            "message": "Grade created successfully",
             "grade": result  # Aquí result debe ser lo que retorna el servicio
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-@router.put(
+@router.patch(
     "/grades/{student_token}/{module}",
     response_model=Dict[str, Any],
     responses={
@@ -79,7 +78,7 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
     """
     try:
         # Actualiza la calificación existente para el estudiante
-        result = service.create_or_update_grades(grade)
+        result = service.update_grades(grade)
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

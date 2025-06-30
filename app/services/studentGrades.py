@@ -15,9 +15,21 @@ class GradesService:
             raise Exception("Could not connect to the database")
         self.collection = self.db["student_grades"]
 
-    def create_or_update_grades(self, student_grades: StudentGrades) -> dict:
+    def create_grade(self,student_grades: StudentGrades) -> dict:
         """
-        Create or update the student's grade in the database.
+        Create  the student's grade in the database.
+        """
+        existing_grades = self.get_grades_by_token(student_grades.student_token, student_grades.module)
+        if not existing_grades:
+            # Si no existe, se crea una nueva entrada
+            result = self.collection.insert_one(student_grades.dict())
+            return {"message": "Grade created successfully", "inserted_id": str(result.inserted_id)}
+        
+
+
+    def update_grades(self, student_grades: StudentGrades) -> dict:
+        """
+        Update the student's grade in the database.
         If the student already has grades for a specific module, update them.
         """
         # Buscar si la calificación para este estudiante y módulo ya existe
@@ -25,16 +37,14 @@ class GradesService:
 
         if existing_grades:
             # Si la calificación ya existe, se actualiza
-            update_data = student_grades.dict(exclude_unset=True)
+            update_data = {"grade": student_grades.grade}
             result = self.collection.update_one(
                 {"student_token": student_grades.student_token, "module": student_grades.module},
                 {"$set": update_data}
             )
             return {"message": "Grade updated successfully", "updated_count": result.modified_count}
-        else:
-            # Si no existe, se crea una nueva entrada
-            result = self.collection.insert_one(student_grades.dict())
-            return {"message": "Grade created successfully", "inserted_id": str(result.inserted_id)}
+        return {"message": "Grade not found"}
+
 
     def get_grades_by_token(self, student_token: str, module: str) -> Optional[dict]:
         """
