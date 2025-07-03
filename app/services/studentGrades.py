@@ -19,7 +19,7 @@ class GradesService:
         """
         Create  the student's grade in the database.
         """
-        existing_grades = self.get_grades_by_token(student_grades.student_token, student_grades.module)
+        existing_grades = self.get_grades_by_token(student_grades.email, student_grades.module)
         if not existing_grades:
             # Si no existe, se crea una nueva entrada
             result = self.collection.insert_one(student_grades.dict())
@@ -33,13 +33,13 @@ class GradesService:
         If the student already has grades for a specific module, update them.
         """
         # Buscar si la calificación para este estudiante y módulo ya existe
-        existing_grades = self.get_grades_by_token(student_grades.student_token, student_grades.module)
+        existing_grades = self.get_grades_by_token(student_grades.email, student_grades.module)
 
         if existing_grades:
             # Si la calificación ya existe, se actualiza
             update_data = {"grade": student_grades.grade}
             result = self.collection.update_one(
-                {"student_token": student_grades.student_token, "module": student_grades.module},
+                {"student_token": student_grades.email, "module": student_grades.module},
                 {"$set": update_data}
             )
             return {"message": "Grade updated successfully", "updated_count": result.modified_count}
