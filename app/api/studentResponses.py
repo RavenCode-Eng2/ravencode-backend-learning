@@ -22,7 +22,7 @@ def get_student_responses_service():
                     "example": {
                         "message": "Responses saved successfully",
                         "responses": {
-                            "student_token": "token123",
+                            "email": "token123",
                             "responses": [
                                 {"question_id": "1", "response": "A"},
                                 {"question_id": "2", "response": "B"}
@@ -43,7 +43,7 @@ async def save_responses(responses: StudentResponses, service: ResponsesService 
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get(
-    "/responses/{student_token}",
+    "/responses/{email}",
     response_model=Dict[str, Any],
     responses={
         200: {
@@ -51,7 +51,7 @@ async def save_responses(responses: StudentResponses, service: ResponsesService 
             "content": {
                 "application/json": {
                     "example": {
-                        "student_token": "token123",
+                        "email": "token123",
                         "responses": [
                             {"question_id": "1", "response": "A"},
                             {"question_id": "2", "response": "B"}
@@ -63,9 +63,9 @@ async def save_responses(responses: StudentResponses, service: ResponsesService 
         404: {"description": "Responses not found"}
     }
 )
-async def get_responses(student_token: str, service: ResponsesService = Depends(get_student_responses_service)):
+async def get_responses(email: str, service: ResponsesService = Depends(get_student_responses_service)):
     try:
-        responses = service.get_responses(student_token)
+        responses = service.get_responses(email)
         if not responses:
             raise HTTPException(status_code=404, detail="Responses not found")
         return responses
