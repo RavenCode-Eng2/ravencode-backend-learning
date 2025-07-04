@@ -11,7 +11,7 @@ def get_student_grade_service():
     return GradesService()
 
 @router.post(
-    "/grades/",
+    "/",
     response_model=Dict[str, Any],
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -22,7 +22,7 @@ def get_student_grade_service():
                     "example": {
                         "message": "Grade created successfully",
                         "grade": {
-                            "student_token": "token123",
+                            "email": "token123",
                             "module": "Math101",
                             "grade": 95.0,
                             "date_assigned": "2025-06-08"
@@ -49,7 +49,7 @@ async def create_grade(grade: StudentGrades, service: GradesService = Depends(ge
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.patch(
-    "/grades/{student_token}/{module}",
+    "/{email}/{module}",
     response_model=Dict[str, Any],
     responses={
         200: {
@@ -59,7 +59,7 @@ async def create_grade(grade: StudentGrades, service: GradesService = Depends(ge
                     "example": {
                         "message": "Grade updated successfully",
                         "grade": {
-                            "student_token": "token123",
+                            "email": "token123",
                             "module": "Math101",
                             "grade": 97.0,
                             "date_assigned": "2025-06-08"
@@ -72,7 +72,7 @@ async def create_grade(grade: StudentGrades, service: GradesService = Depends(ge
         400: {"description": "Invalid data"}
     }
 )
-async def update_grade(student_token: str, module: str, grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
+async def update_grade(email: str, module: str, grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
     """
     Update an existing grade for the student.
     """
@@ -85,7 +85,7 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
 
 
 @router.get(
-    "/grades/{student_token}/{module}",
+    "/{email}/{module}",
     response_model=Dict[str, Any],
     responses={
         200: {
@@ -93,7 +93,7 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
             "content": {
                 "application/json": {
                     "example": {
-                        "student_token": "token123",
+                        "email": "token123",
                         "module": "Math101",
                         "grade": 95.0,
                         "date_assigned": "2025-06-08"
@@ -104,9 +104,9 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
         404: {"description": "Grade not found"}
     }
 )
-async def get_grade(student_token: str, module: str, service: GradesService = Depends(get_student_grade_service)):
+async def get_grade(email: str, module: str, service: GradesService = Depends(get_student_grade_service)):
     try:
-        grade = service.get_grade_by_student_token(student_token, module)
+        grade = service.get_grades_by_email(email, module)
         if not grade:
             raise HTTPException(status_code=404, detail="Grade not found")
         return grade
@@ -114,7 +114,7 @@ async def get_grade(student_token: str, module: str, service: GradesService = De
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get(
-    "/grades/",
+    "/",
     response_model=List[Dict[str, Any]],
     responses={
         200: {
@@ -123,7 +123,7 @@ async def get_grade(student_token: str, module: str, service: GradesService = De
                 "application/json": {
                     "example": [
                         {
-                            "student_token": "token123",
+                            "email": "token123",
                             "module": "Math101",
                             "grade": 95.0,
                             "date_assigned": "2025-06-08"
