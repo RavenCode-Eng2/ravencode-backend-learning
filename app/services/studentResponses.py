@@ -21,11 +21,11 @@ class ResponsesService:
         Create or update the student's responses in the database.
         If the student already has responses, updates them.
         """
-        existing_responses = self.get_responses_by_token(student_responses.student_token)
+        existing_responses = self.get_responses_by_token(student_responses.email)
         if existing_responses:
             update_data = student_responses.dict(exclude_unset=True)
             result = self.collection.update_one(
-                {"student_token": student_responses.student_token},
+                {"email": student_responses.email},
                 {"$set": update_data}
             )
             return {"updated_count": result.modified_count}
@@ -33,11 +33,11 @@ class ResponsesService:
         result = self.collection.insert_one(student_responses.dict())
         return {"inserted_id": str(result.inserted_id)}
 
-    def get_responses_by_token(self, student_token: str) -> Optional[dict]:
+    def get_responses_by_token(self, email: str) -> Optional[dict]:
         """
         Retrieve student responses by their token.
         """
-        student_responses = self.collection.find_one({"student_token": student_token})
+        student_responses = self.collection.find_one({"email": email})
         if student_responses:
             student_responses["_id"] = str(student_responses["_id"])
         return student_responses
