@@ -19,10 +19,15 @@ class GradesService:
         """
         Create  the student's grade in the database.
         """
-        existing_grades = self.get_grades_by_token(student_grades.email, student_grades.module)
+        email = student_grades.email.strip()
+        module = student_grades.module.strip()
+        existing_grades = self.get_grades_by_email(email, module)
         if not existing_grades:
             # Si no existe, se crea una nueva entrada
-            result = self.collection.insert_one(student_grades.dict())
+            data = student_grades.dict()
+            data['email'] = email
+            data['module'] = module
+            result = self.collection.insert_one(data)
             return {"message": "Grade created successfully", "inserted_id": str(result.inserted_id)}
         
 
@@ -32,25 +37,28 @@ class GradesService:
         Update the student's grade in the database.
         If the student already has grades for a specific module, update them.
         """
-        # Buscar si la calificación para este estudiante y módulo ya existe
-        existing_grades = self.get_grades_by_token(student_grades.email, student_grades.module)
+        email = student_grades.email.strip()
+        module = student_grades.module.strip()
+        existing_grades = self.get_grades_by_email(email, module)
 
         if existing_grades:
             # Si la calificación ya existe, se actualiza
             update_data = {"grade": student_grades.grade}
             result = self.collection.update_one(
-                {"student_token": student_grades.email, "module": student_grades.module},
+                {"email": email, "module": module},
                 {"$set": update_data}
             )
             return {"message": "Grade updated successfully", "updated_count": result.modified_count}
         return {"message": "Grade not found"}
 
 
-    def get_grades_by_token(self, student_token: str, module: str) -> Optional[dict]:
+    def get_grades_by_email(self, email: str, module: str) -> Optional[dict]:
         """
-        Retrieve student grades by their token and module.
+        Retrieve student grades by their email and module.
         """
-        student_grades = self.collection.find_one({"student_token": student_token, "module": module})
+        print(f"Buscando: email='{email}', module='{module}'")
+        student_grades = self.collection.find_one({"email": email.strip(), "module": module.strip()})
+        print(f"Resultado: {student_grades}")
         if student_grades:
             student_grades["_id"] = str(student_grades["_id"])  # Convertimos el ObjectId a string
         return student_grades
