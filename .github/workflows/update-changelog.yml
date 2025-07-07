@@ -2,48 +2,39 @@
 name: Actualizar CHANGELOG
 
 permissions:
-  contents: write           # para leer y escribir archivos
-  pull-requests: write      # para crear PRs
+  contents: write
+  pull-requests: write
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   update-changelog:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout completo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Generar sección de changelog
+      - name: Generar sección de CHANGELOG
         run: |
           echo "## $(date +'%Y-%m-%d')" >> CHANGELOG.md
           git log ${{ github.event.before }}..${{ github.sha }} \
             --pretty=format:"- %s" >> CHANGELOG.md
 
-      - name: Configurar Git y crear rama
-        run: |
-          BRANCH_NAME="update-changelog-${{ github.run_number }}"
-          git config user.name "${{ github.event.pusher.name }}"
-          git config user.email "${{ github.event.pusher.email }}"
-          git checkout -b "$BRANCH_NAME"
-          git add CHANGELOG.md
-          git commit -m "docs: actualizar CHANGELOG con nuevos commits"
-          git push --set-upstream origin "$BRANCH_NAME"
-
-      - name: Abrir Pull Request automáticamente
+      - name: Crear Pull Request con los cambios
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: docs:actualizar CHANGELOG con nuevos commits
+          branch: update-changelog-${{ github.run_id }}
+          base: main
+          
+          commit-message: "docs: actualizar CHANGELOG con nuevos commits"
           title: "docs: actualizar CHANGELOG"
           body: |
-            Este Pull Request actualiza el CHANGELOG con los commits recientes en `main`.
-          base: main
-          head: update-changelog-${{ github.run_number }}
+            Este PR actualiza el CHANGELOG con los commits recientes en `main`.
+          author: ${{ github.event.pusher.name }} <${{ github.event.pusher.email }}>
           labels: changelog
