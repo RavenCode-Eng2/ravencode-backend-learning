@@ -1,42 +1,33 @@
-# .github/workflows/update-changelog.yml
-name: Update Changelog
+# .github/workflows/changelog-local-update.yml
+name: Local Changelog Prep
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
-  changelog:
+  prepare-changelog:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Configure Git user
+      - name: Configure Git
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
-      - name: Generate changelog entry
+      - name: Create new branch and update changelog
         run: |
+          BRANCH="changelog-temp-$(date +%s)"
+          git checkout -b $BRANCH
           echo "## Cambios en $(date '+%Y-%m-%d')" > changelog_temp.md
           git log -1 --pretty=format:"- %s (%h)" >> changelog_temp.md
           cat changelog_temp.md >> CHANGELOG.md
-
-      - name: Create branch and commit changelog
-        run: |
-          BRANCH="update-changelog-$(date +%s)"
-          git checkout -b $BRANCH
           git add CHANGELOG.md
           git commit -m "chore: update changelog"
-          git push origin $BRANCH
-
-      - name: Open pull request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: update changelog
-          title: 📝 Actualizar CHANGELOG
-          body: |
-            Se agregó entrada al changelog con base en el último commit a `main`.
-          branch: ${{ github.ref_name }}
