@@ -24,7 +24,7 @@ jobs:
           git log ${{ github.event.before }}..${{ github.sha }} \
             --pretty=format:"- %s" >> CHANGELOG.md
 
-      - name: Crear o resetear rama uploadchagelog
+      - name: Crear o resetear rama uploadchangelog
         run: git checkout -B uploadchangelog
 
       - name: Configurar autor del commit
@@ -37,5 +37,5 @@ jobs:
           git add CHANGELOG.md
           git commit -m "${{ github.event.head_commit.message }}"
 
-      - name: Push de la rama uploadchagelog
-        run: git push --force --set-upstream origin uploadchagelog
+      - name: Push de la rama uploadchangelog
+        run: git push --force --set-upstream origin uploadchangelog
