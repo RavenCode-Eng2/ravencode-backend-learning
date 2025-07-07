@@ -1,33 +1,41 @@
-# .github/workflows/changelog-local-update.yml
-name: Local Changelog Prep
 
-on:
-  push:
-    branches:
-      - main
+name: Crear rama de changelog
 
 permissions:
   contents: write
 
+on:
+  push:
+    branches: [ main ]
+
 jobs:
-  prepare-changelog:
+  create-upload-changelog-branch:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout completo del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Configure Git
+      - name: Generar sección de CHANGELOG
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
+          echo "## $(date +'%Y-%m-%d')" >> CHANGELOG.md
+          git log ${{ github.event.before }}..${{ github.sha }} \
+            --pretty=format:"- %s" >> CHANGELOG.md
 
-      - name: Create new branch and update changelog
+      - name: Crear o resetear rama uploadchagelog
+        run: git checkout -B uploadchangelog
+
+      - name: Configurar autor del commit
         run: |
-          BRANCH="changelog-temp-$(date +%s)"
-          git checkout -b $BRANCH
-          echo "## Cambios en $(date '+%Y-%m-%d')" > changelog_temp.md
-          git log -1 --pretty=format:"- %s (%h)" >> changelog_temp.md
-          cat changelog_temp.md >> CHANGELOG.md
+          git config user.name "${{ github.event.pusher.name }}"
+          git config user.email "${{ github.event.pusher.email }}"
+
+      - name: Commit de los cambios con mensaje del último push
+        run: |
           git add CHANGELOG.md
-          git commit -m "chore: update changelog"
+          git commit -m "${{ github.event.head_commit.message }}"
+
+      - name: Push de la rama uploadchagelog
+        run: git push --force --set-upstream origin uploadchagelog
