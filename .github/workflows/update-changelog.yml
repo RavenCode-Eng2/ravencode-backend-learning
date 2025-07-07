@@ -1,5 +1,5 @@
-
-name: Crear rama de changelog
+# .github/workflows/create-changelog-branch.yml
+name: Crear rama changelog
 
 permissions:
   contents: write
@@ -9,33 +9,44 @@ on:
     branches: [ main ]
 
 jobs:
-  create-upload-changelog-branch:
+  create_changelog_branch:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout completo del repositorio
+      - name: Checkout de main
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
 
-      - name: Generar sección de CHANGELOG
+      - name: Crear (o resetear) rama changelog
         run: |
-          echo "## $(date +'%Y-%m-%d')" >> CHANGELOG.md
-          git log ${{ github.event.before }}..${{ github.sha }} \
-            --pretty=format:"- %s" >> CHANGELOG.md
+          git fetch origin main
+          git checkout -B changelog
 
-      - name: Crear o resetear rama uploadchangelog
-        run: git checkout -B uploadchangelog
+      - name: Generar sección de CHANGELOG con autor, fecha, título y descripción
+        run: |
+          # Encabezado con la fecha actual
+          echo "## $(date +'%Y-%m-%d')" >> CHANGELOG.md
+
+          # Añade author, date, title y description de cada commit
+          git log ${{ github.event.before }}..${{ github.sha }} \
+            --date=format:'%Y-%m-%d %H:%M:%S' \
+            --pretty=format:"- **Author:** %an%n  **Date:** %ad%n  **Title:** %s%n  **Description:** %b%n" \
+            >> CHANGELOG.md
 
       - name: Configurar autor del commit
         run: |
           git config user.name "${{ github.event.pusher.name }}"
           git config user.email "${{ github.event.pusher.email }}"
 
-      - name: Commit de los cambios con mensaje del último push
+      - name: Commit de los cambios
         run: |
           git add CHANGELOG.md
           git commit -m "${{ github.event.head_commit.message }}"
 
-      - name: Push de la rama uploadchangelog
-        run: git push --force --set-upstream origin uploadchangelog
+      - name: Push de la rama changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push --force --set-upstream origin changelog
