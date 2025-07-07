@@ -1,0 +1,37 @@
+# .github/workflows/update-changelog.yml
+name: Actualizar CHANGELOG
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Añadir commits recientes al CHANGELOG
+        run: |
+          # Encabezado con la fecha actual
+          echo "## $(date +'%Y-%m-%d')" >> CHANGELOG.md
+          # Mensajes de commit entre el SHA anterior y el actual
+          git log ${{ github.event.before }}..${{ github.sha }} \
+            --pretty=format:"- %s" >> CHANGELOG.md
+
+      - name: Commit y push de CHANGELOG.md como quien hizo el merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configura autor usando el pusher (quien hizo el merge)
+          git config user.name "${{ github.event.pusher.name }}"
+          git config user.email "${{ github.event.pusher.email }}"
+          # Añade y confirma cambios
+          git add CHANGELOG.md
+          git commit -m "docs: actualizar CHANGELOG con nuevos commits"
+          git push
