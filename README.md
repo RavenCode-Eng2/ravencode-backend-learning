@@ -148,4 +148,3 @@ Proyecto desarrollado por el equipo Cuervos en el curso Ingeniería de Software 
 #### Docente: Ing. Camilo Ernesto Vargas Romero
 #### Semestre: 2025-1
 
-probando nuevamente la git action
