@@ -1,40 +1,42 @@
 # .github/workflows/update-changelog.yml
-name: Actualizar CHANGELOG
-
-permissions:
-  contents: write
-  pull-requests: write
+name: Update Changelog
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  update-changelog:
+  changelog:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout completo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Generar sección de CHANGELOG
+      - name: Configure Git user
         run: |
-          echo "## $(date +'%Y-%m-%d')" >> CHANGELOG.md
-          git log ${{ github.event.before }}..${{ github.sha }} \
-            --pretty=format:"- %s" >> CHANGELOG.md
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
 
-      - name: Crear Pull Request con los cambios
-        uses: peter-evans/create-pull-request@v4
+      - name: Generate changelog entry
+        run: |
+          echo "## Cambios en $(date '+%Y-%m-%d')" > changelog_temp.md
+          git log -1 --pretty=format:"- %s (%h)" >> changelog_temp.md
+          cat changelog_temp.md >> CHANGELOG.md
+
+      - name: Create branch and commit changelog
+        run: |
+          BRANCH="update-changelog-$(date +%s)"
+          git checkout -b $BRANCH
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog"
+          git push origin $BRANCH
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: update-changelog-${{ github.run_id }}
-          base: main
-          
-          commit-message: "docs: actualizar CHANGELOG con nuevos commits"
-          title: "docs: actualizar CHANGELOG"
+          commit-message: update changelog
+          title: 📝 Actualizar CHANGELOG
           body: |
-            Este PR actualiza el CHANGELOG con los commits recientes en `main`.
-          author: ${{ github.event.pusher.name }} <${{ github.event.pusher.email }}>
-          labels: changelog
+            Se agregó entrada al changelog con base en el último commit a `main`.
+          branch: ${{ github.ref_name }}
