@@ -141,7 +141,7 @@ async def list_grades(service: GradesService = Depends(get_student_grade_service
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete(
-    "/delete-by-email/{email}",
+    "/{email}",
     response_model=Dict[str, Any],
     responses={
         200: {

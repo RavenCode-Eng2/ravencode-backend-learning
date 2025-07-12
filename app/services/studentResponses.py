@@ -31,7 +31,7 @@ class ResponsesService:
             return {"updated_count": result.modified_count}
 
         result = self.collection.insert_one(student_responses.dict())
-        return {"inserted_id": str(result.inserted_id)}
+        return {"inserted_id": str(result.inserted_id), "message": "Responses created successfully"}
 
     def get_responses_by_token(self, email: str) -> Optional[dict]:
         """
