@@ -139,3 +139,50 @@ async def list_grades(service: GradesService = Depends(get_student_grade_service
         return service.list_grades()
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete(
+    "/delete-by-email/{email}",
+    response_model=Dict[str, Any],
+    responses={
+        200: {
+            "description": "All grades deleted for the student",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message": "Deleted 3 grades for student with email: student@example.com",
+                        "deleted_count": 3
+                    }
+                }
+            }
+        },
+        404: {
+            "description": "No grades found for the student",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No grades found for this email"
+                    }
+                }
+            }
+        }
+    }
+)
+async def delete_grades_by_email(email: str, service: GradesService = Depends(get_student_grade_service)):
+    """
+    Delete all grades for a student by their email.
+    
+    **Path Parameters:**
+    - `email`: Student's email address
+    
+    **Response Example:**
+    ```json
+    {
+        "message": "Deleted 3 grades for student with email: student@example.com",
+        "deleted_count": 3
+    }
+    ```
+    """
+    result = service.delete_grades_by_email(email)
+    if result["deleted_count"] == 0:
+        raise HTTPException(status_code=404, detail="No grades found for this email")
+    return result

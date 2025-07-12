@@ -1,7 +1,7 @@
 # src/services/responses_service.py
 from typing import Optional, List
 from pymongo.results import InsertOneResult, UpdateResult
-from app.models import studentResponses
+from app.models.studentResponses import StudentResponses
 from app.DB.database import get_database
 
 class ResponsesService:
@@ -16,7 +16,7 @@ class ResponsesService:
             raise Exception("Could not connect to the database")
         self.collection = self.db["student_responses"]
 
-    def create_responses(self, student_responses: studentResponses) -> dict:
+    def create_responses(self, student_responses: StudentResponses) -> dict:
         """
         Create or update the student's responses in the database.
         If the student already has responses, updates them.
@@ -48,3 +48,14 @@ class ResponsesService:
         """
         responses = list(self.collection.find())
         return [{**response, "_id": str(response["_id"])} for response in responses]
+
+    def delete_responses_by_email(self, email: str) -> dict:
+        """
+        Delete all responses for a student by their email.
+        """
+        email = email.strip()
+        result = self.collection.delete_many({"email": email})
+        return {
+            "message": f"Deleted {result.deleted_count} responses for student with email: {email}",
+            "deleted_count": result.deleted_count
+        }

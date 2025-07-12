@@ -15,7 +15,7 @@ class GradesService:
             raise Exception("Could not connect to the database")
         self.collection = self.db["student_grades"]
 
-    def create_grade(self,student_grades: StudentGrades) -> dict:
+    def create_grade(self, student_grades: StudentGrades) -> dict:
         """
         Create  the student's grade in the database.
         """
@@ -29,6 +29,8 @@ class GradesService:
             data['module'] = module
             result = self.collection.insert_one(data)
             return {"message": "Grade created successfully", "inserted_id": str(result.inserted_id)}
+        # Add this line to handle the case when the grade already exists
+        return {"message": "Grade already exists"}
         
 
 
@@ -69,3 +71,14 @@ class GradesService:
         """
         grades = list(self.collection.find())
         return [{**grade, "_id": str(grade["_id"])} for grade in grades]
+
+    def delete_grades_by_email(self, email: str) -> dict:
+        """
+        Delete all grades for a student by their email.
+        """
+        email = email.strip()
+        result = self.collection.delete_many({"email": email})
+        return {
+            "message": f"Deleted {result.deleted_count} grades for student with email: {email}",
+            "deleted_count": result.deleted_count
+        }
