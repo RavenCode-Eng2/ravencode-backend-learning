@@ -38,7 +38,7 @@ def get_student_responses_service():
 async def save_responses(responses: StudentResponses, service: ResponsesService = Depends(get_student_responses_service)):
     try:
         result = service.create_responses(responses)
-        return result
+        return result 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -82,7 +82,8 @@ async def get_responses(email: str, service: ResponsesService = Depends(get_stud
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete(
-    "/responses/delete-by-email/{email}",
+    "/responses/{email}",
+
     response_model=Dict[str, Any],
     responses={
         200: {
