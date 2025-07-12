@@ -83,6 +83,7 @@ async def get_responses(email: str, service: ResponsesService = Depends(get_stud
 
 @router.delete(
     "/responses/{email}",
+
     response_model=Dict[str, Any],
     responses={
         200: {
