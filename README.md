@@ -111,7 +111,7 @@ scrape_configs:
    #### **Acceder a Grafana** 🖥️
    1. Abre un navegador y accede a:
    
-       http://localhost:3000 
+       http://localhost:4000 
 
    2. El usuario y la contraseña por defecto son admin.
 
