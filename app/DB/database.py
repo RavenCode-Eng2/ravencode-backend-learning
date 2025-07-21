@@ -1,4 +1,5 @@
 from typing import Optional
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
@@ -10,57 +11,86 @@ load_dotenv()
 MONGODB_URL = os.getenv("MONGODB_URL", "mongodb+srv://dchicuasuque:7jdNLSir1SHD75hm@cluster0.mongodb.net/?retryWrites=true&w=majority&appName=RavenCodeLearning")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "RavenCodeLearning")
 
-def get_database(db_name: str = DATABASE_NAME) -> Optional[MongoClient]:
+# Collection names
+COURSES_COLLECTION = "courses"
+MODULES_COLLECTION = "modules"
+LESSONS_COLLECTION = "lessons"
+ASSESSMENTS_COLLECTION = "assessments"
+PROGRESS_COLLECTION = "progress"
+ROADMAPS_COLLECTION = "roadmaps"
+
+# Database instance
+_db: Optional[AsyncIOMotorDatabase] = None
+
+async def get_database() -> AsyncIOMotorDatabase:
     """
-    Obtains the MongoDB database connection using MongoDB Atlas connection string.
-    
-    Args:
-        db_name (str): The database name to connect to (default is "RavenCodeLearning").
+    Get the database instance. Creates a new connection if one doesn't exist.
     
     Returns:
-        MongoClient: The MongoDB client connected to the specified database.
-        None: If the connection fails.
+        AsyncIOMotorDatabase: The database instance
     """
-    try:
-        # Get MongoDB URL from environment variable or use the default
-        client = MongoClient(MONGODB_URL)
-        db = client[db_name]
-        return db
-    except Exception as e:
-        print(f"Error al conectar con MongoDB: {e}")
-        return None
+    global _db
+    if _db is None:
+        client = AsyncIOMotorClient(MONGODB_URL)
+        _db = client[DATABASE_NAME]
+        
+        # Create indexes for our collections
+        await _create_indexes()
+    
+    return _db
 
-def test_connection():
+async def _create_indexes():
+    """
+    Creates indexes for all collections in the database.
+    This ensures optimal query performance.
+    """
+    db = await get_database()
+    
+    # Courses indexes
+    await db[COURSES_COLLECTION].create_index("instructor_id")
+    await db[COURSES_COLLECTION].create_index([("title", "text"), ("description", "text")])
+    await db[COURSES_COLLECTION].create_index("status")
+    
+    # Modules indexes
+    await db[MODULES_COLLECTION].create_index("course_id")
+    await db[MODULES_COLLECTION].create_index([("order", 1), ("course_id", 1)], unique=True)
+    
+    # Lessons indexes
+    await db[LESSONS_COLLECTION].create_index("module_id")
+    await db[LESSONS_COLLECTION].create_index("course_id")
+    await db[LESSONS_COLLECTION].create_index([("order", 1), ("module_id", 1)], unique=True)
+    
+    # Assessments indexes
+    await db[ASSESSMENTS_COLLECTION].create_index("module_id")
+    await db[ASSESSMENTS_COLLECTION].create_index("course_id")
+    
+    # Progress indexes
+    await db[PROGRESS_COLLECTION].create_index([("user_id", 1), ("course_id", 1)], unique=True)
+    await db[PROGRESS_COLLECTION].create_index("user_id")
+    await db[PROGRESS_COLLECTION].create_index("course_id")
+
+async def test_connection() -> bool:
     """
     Tests the MongoDB connection and returns True if successful, False otherwise.
-    Prints a message indicating the result of the connection attempt.
     
     Returns:
         bool: True if the connection is successful, False otherwise.
     """
     try:
-        # Test the connection using the MongoDB URL
-        client = MongoClient(MONGODB_URL)
-        # Test the connection by pinging the server
-        client.admin.command('ping')
+        db = await get_database()
+        await db.command('ping')
         print("✅ MongoDB connection successful!")
         return True
     except Exception as e:
         print(f"❌ MongoDB connection failed: {e}")
         return False
-    finally:
-        if 'client' in locals():
-            client.close()
 
-def close_database(client: MongoClient):
+async def close_database():
     """
     Closes the MongoDB database connection.
-    
-    Args:
-        client (MongoClient): The MongoClient instance to close.
-        
-    Prints a message when the connection is closed.
     """
-    if client:
-        client.close()
+    global _db
+    if _db is not None:
+        _db.client.close()
+        _db = None
         print("MongoDB connection closed.")

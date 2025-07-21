@@ -23,8 +23,8 @@ class StudentResponses(BaseModel):
     student_token: str = Field(..., description="Token único del estudiante")
     responses: List[Response] = Field(..., description="Lista de respuestas del estudiante")
 
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "student_token": "abcd1234",
                 "responses": [
@@ -34,3 +34,4 @@ class StudentResponses(BaseModel):
                 ]
             }
         }
+    }

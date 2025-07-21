@@ -16,8 +16,8 @@ class StudentGrades(BaseModel):
     grade: float = Field(..., description="Calificación obtenida en el módulo")
     date_assigned: str = Field(..., description="Fecha de asignación de la calificación")
     
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "student_token": "token123",
                 "module": "Math101",
@@ -25,3 +25,4 @@ class StudentGrades(BaseModel):
                 "date_assigned": "2025-06-08"
             }
         }
+    }

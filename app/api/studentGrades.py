@@ -107,7 +107,7 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
 )
 async def get_grade(student_token: str, module: str, service: GradesService = Depends(get_student_grade_service)):
     try:
-        grade = service.get_grade_by_student_token(student_token, module)
+        grade = service.get_grades_by_token(student_token, module)
         if not grade:
             raise HTTPException(status_code=404, detail="Grade not found")
         return grade
