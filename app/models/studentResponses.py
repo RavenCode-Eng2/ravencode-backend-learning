@@ -17,16 +17,16 @@ class StudentResponses(BaseModel):
     Representa las respuestas de un estudiante a un conjunto de preguntas.
 
     Attributes:
-        student_token (str): Token único asignado al estudiante.
+        email (str): Token único asignado al estudiante.
         responses (List[Response]): Lista de respuestas con sus respectivos identificadores de pregunta.
     """
-    student_token: str = Field(..., description="Token único del estudiante")
+    email: str = Field(..., description="Token único del estudiante")
     responses: List[Response] = Field(..., description="Lista de respuestas del estudiante")
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "student_token": "abcd1234",
+                "email": "abcd1234",
                 "responses": [
                     {"question_id": 1, "answer": "a"},
                     {"question_id": 2, "answer": "b"},

@@ -11,7 +11,7 @@ def get_student_grade_service():
     return GradesService()
 
 @router.post(
-    "/grades/",
+    "/",
     response_model=Dict[str, Any],
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -22,7 +22,7 @@ def get_student_grade_service():
                     "example": {
                         "message": "Grade created successfully",
                         "grade": {
-                            "student_token": "token123",
+                            "email": "token123",
                             "module": "Math101",
                             "grade": 95.0,
                             "date_assigned": "2025-06-08"
@@ -34,23 +34,22 @@ def get_student_grade_service():
         400: {"description": "Grade already exists or invalid data"}
     }
 )
-async def create_or_update_grade(grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
+async def create_grade(grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
     """
     Create or update a student's grade in the database.
     If the student already has grades, updates them.
     """
     try:
-        # Llamamos al servicio que maneja la creación o actualización de las calificaciones
-        result = service.create_or_update_grades(grade)
+        # Llamamos al servicio que maneja la creación  de las calificaciones
+        result = service.create_grade(grade)
         return {
-            "message": "Grade created successfully",
             "grade": result  # Aquí result debe ser lo que retorna el servicio
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-@router.put(
-    "/grades/{student_token}/{module}",
+@router.patch(
+    "/{email}/{module}",
     response_model=Dict[str, Any],
     responses={
         200: {
@@ -60,7 +59,7 @@ async def create_or_update_grade(grade: StudentGrades, service: GradesService = 
                     "example": {
                         "message": "Grade updated successfully",
                         "grade": {
-                            "student_token": "token123",
+                            "email": "token123",
                             "module": "Math101",
                             "grade": 97.0,
                             "date_assigned": "2025-06-08"
@@ -73,20 +72,20 @@ async def create_or_update_grade(grade: StudentGrades, service: GradesService = 
         400: {"description": "Invalid data"}
     }
 )
-async def update_grade(student_token: str, module: str, grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
+async def update_grade(email: str, module: str, grade: StudentGrades, service: GradesService = Depends(get_student_grade_service)):
     """
     Update an existing grade for the student.
     """
     try:
         # Actualiza la calificación existente para el estudiante
-        result = service.create_or_update_grades(grade)
+        result = service.update_grades(grade)
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get(
-    "/grades/{student_token}/{module}",
+    "/{email}/{module}",
     response_model=Dict[str, Any],
     responses={
         200: {
@@ -94,7 +93,7 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
             "content": {
                 "application/json": {
                     "example": {
-                        "student_token": "token123",
+                        "email": "token123",
                         "module": "Math101",
                         "grade": 95.0,
                         "date_assigned": "2025-06-08"
@@ -105,9 +104,9 @@ async def update_grade(student_token: str, module: str, grade: StudentGrades, se
         404: {"description": "Grade not found"}
     }
 )
-async def get_grade(student_token: str, module: str, service: GradesService = Depends(get_student_grade_service)):
+async def get_grade(email: str, module: str, service: GradesService = Depends(get_student_grade_service)):
     try:
-        grade = service.get_grades_by_token(student_token, module)
+        grade = service.get_grades_by_email(email, module)
         if not grade:
             raise HTTPException(status_code=404, detail="Grade not found")
         return grade
@@ -115,7 +114,7 @@ async def get_grade(student_token: str, module: str, service: GradesService = De
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get(
-    "/grades/",
+    "/",
     response_model=List[Dict[str, Any]],
     responses={
         200: {
@@ -124,7 +123,7 @@ async def get_grade(student_token: str, module: str, service: GradesService = De
                 "application/json": {
                     "example": [
                         {
-                            "student_token": "token123",
+                            "email": "token123",
                             "module": "Math101",
                             "grade": 95.0,
                             "date_assigned": "2025-06-08"
@@ -140,3 +139,50 @@ async def list_grades(service: GradesService = Depends(get_student_grade_service
         return service.list_grades()
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete(
+    "/delete-by-email/{email}",
+    response_model=Dict[str, Any],
+    responses={
+        200: {
+            "description": "All grades deleted for the student",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message": "Deleted 3 grades for student with email: student@example.com",
+                        "deleted_count": 3
+                    }
+                }
+            }
+        },
+        404: {
+            "description": "No grades found for the student",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No grades found for this email"
+                    }
+                }
+            }
+        }
+    }
+)
+async def delete_grades_by_email(email: str, service: GradesService = Depends(get_student_grade_service)):
+    """
+    Delete all grades for a student by their email.
+    
+    **Path Parameters:**
+    - `email`: Student's email address
+    
+    **Response Example:**
+    ```json
+    {
+        "message": "Deleted 3 grades for student with email: student@example.com",
+        "deleted_count": 3
+    }
+    ```
+    """
+    result = service.delete_grades_by_email(email)
+    if result["deleted_count"] == 0:
+        raise HTTPException(status_code=404, detail="No grades found for this email")
+    return result
